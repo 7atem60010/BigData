@@ -1,0 +1,13 @@
+$HADOOP_HOME/bin/hdfs namenode -format
+$HADOOP_HOME/sbin/hadoop-daemon.sh --script hdfs start namenode
+$HADOOP_HOME/sbin/hadoop-daemon.sh --script hdfs start datanode
+xdg-open http://localhost:50070/
+
+$HADOOP_HOME/bin/hdfs fs -mkdir /user
+$HADOOP_HOME/bin/hdfs fs -mkdir /user/$USER
+
+$HADOOP_HOME/sbin/yarn-daemon.sh start resourcemanager
+$HADOOP_HOME/sbin/yarn-daemon.sh start nodemanager
+xdg-open http://localhost:8088/
+
+

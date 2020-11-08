@@ -1,0 +1,19 @@
+#!/bin/bash
+export JAVA_HOME=$HADOOP_HOME/../jdk1.8.0_101
+#export HADOOP_HOME=$HADO
+export PATH=${JAVA_HOME}/bin:${HADOOP_HOME}/bin:${PATH}
+export HADOOP_CLASSPATH=${JAVA_HOME}/lib/tools.jar:${HADOOP_HOME}/share/hadoop/tools/lib/*
+
+function pyjob(){
+JO=$1
+IN=$2
+echo $IN
+hadoop fs -rm -r /user/output/$JO
+            hadoop org.apache.hadoop.streaming.HadoopStreaming \
+            -files ./$JO/mapper.py,./$JO/reducer.py \
+            -input /user/input \
+            -output /user/output/$JO \
+            -mapper mapper.py \
+            -combiner reducer.py \
+            -reducer reducer.py
+    }
