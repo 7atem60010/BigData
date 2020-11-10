@@ -27,11 +27,12 @@ pyjob subreddit_count
 pyjob user_count 
 pyjob get_max /user/output/subreddit_count subreddit_max 1
 pyjob get_max /user/output/user_count user_max 1
+rm -r results ; mkdir results
 hadoop fs -get /user/output/subreddit_max/part-00000 ./results/subreddit_max
 hadoop fs -get /user/output/user_max/part-00000 ./results/user_max
 touch ./temp
-cp ./hot_topics/rawmapper.py ./hot_topics/mapper.py
+cp ./topics_counter/rawmapper.py ./topics_counter/mapper.py
 cat ./results/subreddit_max| awk '{print "\"" $1 "\"" ","}' > temp
-sed -i "6 i $(cat temp | tr -d '\n')" ./hot_topics/mapper.py
+sed -i "6 i $(cat temp | tr -d '\n')" ./topics_counter/mapper.py
 rm ./temp
-pyjob hot_topics 
+pyjob topics_counter 
