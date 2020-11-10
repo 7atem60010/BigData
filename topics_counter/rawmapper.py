@@ -7,12 +7,14 @@ lst = [
         ]
 for line in sys.stdin:
     dct = loads(line)
-    t = dct["body"].split()[0]
-    k = dct["subreddit"]+','+t
     #SOME NLP SHIT GOES HERRE
     #v = ??
-    v = 1
+    k = dct["subreddit"]
     if k in lst:
+        #t = 'huuh'
+        t = dct["body"].split()[0]
+        v = 1
+        k += ','+t
         print(k,v,sep='\t')
 
 
