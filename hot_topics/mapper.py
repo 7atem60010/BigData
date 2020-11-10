@@ -4,7 +4,6 @@ import sys
 from json import loads
 lst = [
 "AskReddit","funny","pcmasterrace",
-
         ]
 for line in sys.stdin:
     dct = loads(line)

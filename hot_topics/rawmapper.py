@@ -7,7 +7,8 @@ lst = [
         ]
 for line in sys.stdin:
     dct = loads(line)
-    k = dct["subreddit"]
+    t = dct["body"].split()[0]
+    k = dct["subreddit"]+','+t
     #SOME NLP SHIT GOES HERRE
     #v = ??
     v = 1
