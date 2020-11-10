@@ -10,4 +10,6 @@ $HADOOP_HOME/sbin/yarn-daemon.sh start resourcemanager
 $HADOOP_HOME/sbin/yarn-daemon.sh start nodemanager
 xdg-open http://localhost:8088/
 
-
+hadoop fs -mkdir /user
+hadoop fs -mkdir /user/input
+hadoop fs -mkdir /user/output

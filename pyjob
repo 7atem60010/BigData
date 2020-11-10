@@ -6,14 +6,32 @@ export HADOOP_CLASSPATH=${JAVA_HOME}/lib/tools.jar:${HADOOP_HOME}/share/hadoop/t
 
 function pyjob(){
 JO=$1
-IN=$2
-echo $IN
-hadoop fs -rm -r /user/output/$JO
+IN=${2:-/user/input/}
+OUT=${3:-$JO}
+RED=${4:-4} #4 default rerduce tasks
+MAP=${5:-4} #4 default map tasks
+printf "=============\nStarting the job $JO with output to $OUT\n============\n"
+hadoop fs -rm -r /user/output/$OUT
             hadoop org.apache.hadoop.streaming.HadoopStreaming \
             -files ./$JO/mapper.py,./$JO/reducer.py \
-            -input /user/input \
-            -output /user/output/$JO \
-            -mapper mapper.py \
+	    -D mapred.reduce.tasks=$RED \
+	    -D mapred.map.tasks=$MAP \
+            -input $IN \
+            -output /user/output/$OUT \
+            -mapper 'mapper.py 1' \
             -combiner reducer.py \
             -reducer reducer.py
     }
+
+pyjob subreddit_count 
+pyjob user_count 
+pyjob get_max /user/output/subreddit_count subreddit_max 1
+pyjob get_max /user/output/user_count user_max 1
+hadoop fs -get /user/output/subreddit_max/part-00000 ./results/subreddit_max
+hadoop fs -get /user/output/user_max/part-00000 ./results/user_max
+touch ./temp
+cp ./hot_topics/rawmapper.py ./hot_topics/mapper.py
+cat ./results/subreddit_max| awk '{print "\"" $1 "\"" ","}' > temp
+sed -i "6 i $(cat temp | tr -d '\n')" ./hot_topics/mapper.py
+rm ./temp
+pyjob hot_topics 

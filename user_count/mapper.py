@@ -4,4 +4,5 @@ import sys
 from json import loads
 for line in sys.stdin:
     dct = loads(line)
-    print(dct["author"], 1, sep='\t')
+    if dct["author"] != "[deleted]":
+        print(dct["author"], 1, sep='\t')
