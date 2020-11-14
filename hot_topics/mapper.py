@@ -2,20 +2,10 @@
 
 import sys
 from json import loads
-lst = [
-"AskReddit","funny","pcmasterrace",
 
-        ]
 for line in sys.stdin:
-    dct = loads(line)
-    #SOME NLP SHIT GOES HERRE
-    #v = ??
-    k = dct["subreddit"]
-    if k in lst:
-        #t = 'huuh'
-        t = dct["body"].split()[0]
-        v = 1
-        k += ','+t
-        print(k,v,sep='\t')
+    k,v = line.strip().split()
+    v = int(v)
+    print(f'{1e6-v:06}\t{k}')
 
 

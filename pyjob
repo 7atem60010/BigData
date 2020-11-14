@@ -8,8 +8,8 @@ function pyjob(){
 JO=$1
 IN=${2:-/user/input/}
 OUT=${3:-$JO}
-RED=${4:-4} #4 default rerduce tasks
-MAP=${5:-4} #4 default map tasks
+RED=${4:-6} #4 default rerduce tasks
+MAP=${5:-6} #4 default map tasks
 printf "=============\nStarting the job $JO with output to $OUT\n============\n"
 hadoop fs -rm -r /user/output/$OUT
             hadoop org.apache.hadoop.streaming.HadoopStreaming \
@@ -18,7 +18,7 @@ hadoop fs -rm -r /user/output/$OUT
 	    -D mapred.map.tasks=$MAP \
             -input $IN \
             -output /user/output/$OUT \
-            -mapper 'mapper.py 1' \
+            -mapper mapper.py \
             -combiner reducer.py \
             -reducer reducer.py
     }
@@ -28,11 +28,18 @@ pyjob user_count
 pyjob get_max /user/output/subreddit_count subreddit_max 1
 pyjob get_max /user/output/user_count user_max 1
 rm -r results ; mkdir results
-hadoop fs -get /user/output/subreddit_max/part-00000 ./results/subreddit_max
-hadoop fs -get /user/output/user_max/part-00000 ./results/user_max
+hadoop fs -getmerge /user/output/subreddit_max/ ./results/subreddit_max
+hadoop fs -getmerge /user/output/user_max/ ./results/user_max
 touch ./temp
 cp ./topics_counter/rawmapper.py ./topics_counter/mapper.py
+cp ./what_time/rawmapper.py ./what_time/mapper.py
 cat ./results/subreddit_max| awk '{print "\"" $1 "\"" ","}' > temp
 sed -i "6 i $(cat temp | tr -d '\n')" ./topics_counter/mapper.py
+sed -i "6 i $(cat temp | tr -d '\n')" ./what_time/mapper.py
 rm ./temp
 pyjob topics_counter 
+pyjob hot_topics /user/output/topics_counter hot_topics 1
+pyjob controv
+pyjob topics_updown
+pyjob get_max /user/output/topics_updown max_topics_upvotes 1
+pyjob what_time
