@@ -13,6 +13,6 @@ for line in sys.stdin:
     if sub in lst:
         time = data['created_utc']
         ts = int(time)
-        ts = int(datetime.utcfromtimestamp(ts).strftime('%M'))//3
+        ts = int(datetime.utcfromtimestamp(ts).strftime('%H'))//3
         sub += ',' + str(ts)
         print(sub,1, sep='\t')

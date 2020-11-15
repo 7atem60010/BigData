@@ -1,0 +1,40 @@
+#!/usr/bin/python3
+
+import sys
+from json import loads
+lst = [
+
+        ]
+import string
+import operator
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from collections import Counter
+translator = str.maketrans('', '', string.punctuation)
+stop_words = set(stopwords.words('english')) 
+stop_words.add('deleted')
+
+for line in sys.stdin:
+    dct = loads(line)
+    #SOME NLP SHIT GOES HERRE
+    #v = ??
+    k = dct["subreddit"]
+    if k in lst:
+        word_tokens = word_tokenize(dct['body'].translate(translator).lower())
+        filtered_sentence = [w for w in word_tokens if not w in stop_words]
+        t = dct["body"].split()[0]
+        res = None
+        if len(filtered_sentence) ==  0:
+            res = None
+        else:
+            occurence_count = Counter(filtered_sentence)
+            if occurence_count.most_common(1)[0][1] > 1 :
+                res=occurence_count.most_common(1)[0][0]
+        v = 1
+        if res is None:
+            continue
+        k += ','+res
+        print(k,v,sep='\t')
+
+

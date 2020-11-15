@@ -20,5 +20,5 @@ for line in sys.stdin:
         occurence_count = Counter(filtered_sentence)
         if occurence_count.most_common(1)[0][1] > 1 :
             topic=occurence_count.most_common(1)[0][0]
-            if y['ups']>=0:
+            if y['ups']>0:
                 print(topic , y['ups'])

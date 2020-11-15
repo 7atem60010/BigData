@@ -1,12 +1,22 @@
 #!/bin/bash
+
 export JAVA_HOME=$HADOOP_HOME/../jdk1.8.0_101
 #export HADOOP_HOME=$HADO
 export PATH=${JAVA_HOME}/bin:${HADOOP_HOME}/bin:${PATH}
 export HADOOP_CLASSPATH=${JAVA_HOME}/lib/tools.jar:${HADOOP_HOME}/share/hadoop/tools/lib/*
+hadoop fs -mkdir /user
+hadoop fs -mkdir /user/input
+hadoop fs -mkdir /user/output
 
-function pyjob(){
+#=================YOUR TASK FOR THIS ASSIGNMENT:========== 
+#put the file in place of sample, dont change the path please
+export Default_Input=/user/input
+hadoop fs -put ./sample $Default_Input
+#=========================================================
+
+function pyjob_diff(){
 JO=$1
-IN=${2:-/user/input/}
+IN=${2:-$Default_Input}
 OUT=${3:-$JO}
 RED=${4:-6} #4 default rerduce tasks
 MAP=${5:-6} #4 default map tasks
@@ -15,7 +25,21 @@ hadoop fs -rm -r /user/output/$OUT
             hadoop org.apache.hadoop.streaming.HadoopStreaming \
             -files ./$JO/mapper.py,./$JO/reducer.py \
 	    -D mapred.reduce.tasks=$RED \
-	    -D mapred.map.tasks=$MAP \
+            -input $IN \
+            -output /user/output/$OUT \
+            -mapper mapper.py \
+            -combiner reducer.py \
+            -reducer reducer.py
+    }
+
+function pyjob(){
+JO=$1
+IN=${2:-$Default_Input}
+OUT=${3:-$JO}
+printf "=============\nStarting the job $JO with output to $OUT\n============\n"
+hadoop fs -rm -r /user/output/$OUT
+            hadoop org.apache.hadoop.streaming.HadoopStreaming \
+            -files ./$JO/mapper.py,./$JO/reducer.py \
             -input $IN \
             -output /user/output/$OUT \
             -mapper mapper.py \
@@ -25,21 +49,43 @@ hadoop fs -rm -r /user/output/$OUT
 
 pyjob subreddit_count 
 pyjob user_count 
-pyjob get_max /user/output/subreddit_count subreddit_max 1
-pyjob get_max /user/output/user_count user_max 1
-rm -r results ; mkdir results
+pyjob_diff get_max /user/output/subreddit_count subreddit_max 1
+pyjob_diff get_max /user/output/user_count user_max 1
+
+mkdir results
 hadoop fs -getmerge /user/output/subreddit_max/ ./results/subreddit_max
 hadoop fs -getmerge /user/output/user_max/ ./results/user_max
-touch ./temp
+hadoop fs -getmerge /user/output/subreddit_count ./results/subreddit_count
+hadoop fs -getmerge /user/output/user_count ./results/user_count
+
 cp ./topics_counter/rawmapper.py ./topics_counter/mapper.py
+cp ./topics_counter_user/rawmapper.py ./topics_counter_user/mapper.py
 cp ./what_time/rawmapper.py ./what_time/mapper.py
 cat ./results/subreddit_max| awk '{print "\"" $1 "\"" ","}' > temp
 sed -i "6 i $(cat temp | tr -d '\n')" ./topics_counter/mapper.py
 sed -i "6 i $(cat temp | tr -d '\n')" ./what_time/mapper.py
+cat ./results/user_max| awk '{print "\"" $1 "\"" ","}' > temp
+sed -i "6 i $(cat temp | tr -d '\n')" ./topics_counter_user/mapper.py
 rm ./temp
+
 pyjob topics_counter 
-pyjob hot_topics /user/output/topics_counter hot_topics 1
+pyjob topics_counter_user
+#hadoop fs -getmerge /user/output/topics_counter ./results/topics_counter
+#hadoop fs -getmerge /user/output/topics_counter_user ./results/topics_counter_user
+
+pyjob_diff hot_topics /user/output/topics_counter hot_topics 1
+pyjob_diff hot_topics /user/output/topics_counter_user hot_topics_user 1
+hadoop fs -getmerge /user/output/hot_topics ./results/hot_topics
+hadoop fs -getmerge /user/output/hot_topics_user ./results/hot_topics_user
+
 pyjob controv
+hadoop fs -getmerge /user/output/controv ./results/controv
+
 pyjob topics_updown
-pyjob get_max /user/output/topics_updown max_topics_upvotes 1
+pyjob_diff get_max /user/output/topics_updown max_topics_upvotes 1
+hadoop fs -getmerge /user/output/topics_updown ./results/temp
+sed 's/\"//g' ./results/temp > ./results/max_topics_upvotes
+rm ./results/temp
 pyjob what_time
+hadoop fs -getmerge /user/output/what_time ./results/what_time
+
